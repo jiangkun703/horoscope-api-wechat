@@ -154,20 +154,20 @@ function findConstellation(input) {
 
 // 格式化微信输出
 function formatWechatOutput(result) {
-  const stars = '★'.repeat(result.overall) + '☆'.repeat(5 - result.overall);
+  // 纯ASCII版本，避免编码问题
+  const stars = '*'.repeat(result.overall) + '-'.repeat(5 - result.overall);
   
-  return `✨ ${result.constellation}今日运势\n\n` +
-    `综合：${stars}（${result.overall}星）\n` +
-    `爱情：${'★'.repeat(result.love)}${'☆'.repeat(5 - result.love)}\n` +
-    `事业：${'★'.repeat(result.career)}${'☆'.repeat(5 - result.career)}\n` +
-    `财运：${'★'.repeat(result.wealth)}${'☆'.repeat(5 - result.wealth)}\n` +
-    `健康：${'★'.repeat(result.health)}${'☆'.repeat(5 - result.health)}\n\n` +
-    `📅 日期：${result.today}\n` +
-    `💡 建议：${result.dailyAdvice}\n` +
-    `🎨 幸运色：${result.luckyColor}\n` +
-    `🔢 幸运数字：${result.luckyNumber}\n` +
-    `🧭 幸运方位：${result.luckyDirection}\n\n` +
-    `"${result.description}"`;
+  return `${result.constellation}今日运势 (${result.today})\n\n` +
+    `综合运势：${stars} (${result.overall}星)\n` +
+    `爱情运势：${'*'.repeat(result.love)}${'-'.repeat(5 - result.love)}\n` +
+    `事业运势：${'*'.repeat(result.career)}${'-'.repeat(5 - result.career)}\n` +
+    `财运运势：${'*'.repeat(result.wealth)}${'-'.repeat(5 - result.wealth)}\n` +
+    `健康运势：${'*'.repeat(result.health)}${'-'.repeat(5 - result.health)}\n\n` +
+    `今日建议：${result.dailyAdvice}\n` +
+    `幸运颜色：${result.luckyColor}\n` +
+    `幸运数字：${result.luckyNumber}\n` +
+    `幸运方位：${result.luckyDirection}\n\n` +
+    `${result.description}`;
 }
 
 // 主处理函数
@@ -343,10 +343,19 @@ module.exports = async (req, res) => {
     const horoscope = generateHoroscope(constellation.id);
     
     // 根据请求头决定输出格式
-    const userAgent = req.headers['user-agent'] || '';
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const isWeChat = userAgent.includes('micromessenger') || userAgent.includes('wechat');
+    const wantsJson = query.format === 'json';
+    const wantsText = query.format === 'text';
     
-    // 如果是微信环境，返回文本格式
-    if (userAgent.includes('MicroMessenger') || query.format === 'text') {
+    // 调试信息（仅开发环境）
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`User-Agent: ${req.headers['user-agent']?.substring(0, 100)}...`);
+      console.log(`isWeChat: ${isWeChat}, wantsJson: ${wantsJson}, wantsText: ${wantsText}`);
+    }
+    
+    // 如果是微信环境且未明确要求JSON，则返回文本格式
+    if ((isWeChat && !wantsJson) || wantsText) {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.status(200).send(formatWechatOutput(horoscope));
       return;
