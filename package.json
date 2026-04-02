@@ -1,0 +1,6 @@
+{
+  "name": "constellation-api",
+  "version": "1.0.0",
+  "description": "星座运势API - 微信插件兼容版",
+  "main": "api/index.js"
+}
