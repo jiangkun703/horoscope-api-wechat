@@ -1,6 +1,34 @@
 {
-  "name": "constellation-api",
-  "version": "1.0.0",
-  "description": "星座运势API - 微信插件兼容版",
-  "main": "api/index.js"
+  "name": "horoscope-api-optimized",
+  "version": "2.0.0",
+  "description": "星座运势API - 优化版，解决Vercel限流问题",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jiangkun703/horoscope-api-wechat.git"
+  },
+  "keywords": [
+    "horoscope",
+    "constellation",
+    "api",
+    "wechat",
+    "vercel",
+    "cache"
+  ],
+  "author": "优化版 by WorkBuddy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jiangkun703/horoscope-api-wechat/issues"
+  },
+  "homepage": "https://github.com/jiangkun703/horoscope-api-wechat#readme"
 }
