@@ -154,19 +154,85 @@ function findConstellation(input) {
 
 // 格式化微信输出
 function formatWechatOutput(result) {
-  // 纯ASCII版本，避免编码问题
-  const stars = '*'.repeat(result.overall) + '-'.repeat(5 - result.overall);
+  // 分数转文字描述
+  function getLevelText(score) {
+    if (score >= 5) return '极佳';
+    if (score >= 4) return '不错';
+    if (score >= 3) return '一般';
+    if (score >= 2) return '欠佳';
+    return '不佳';
+  }
   
+  // 各领域详细建议（根据分数选择）
+  const loveAdvice = [
+    '感情方面需要多主动，单身者有机会遇到心仪对象。',
+    '感情可能有些波折，多沟通能化解误会。',
+    '感情运势平平，保持现状即可。',
+    '感情稳定，适合安排浪漫约会。',
+    '感情甜蜜，适合表白或求婚。'
+  ];
+  
+  const careerAdvice = [
+    '工作压力较大，注意劳逸结合。',
+    '工作中可能遇到挑战，保持耐心。',
+    '工作运势一般，按部就班完成任务。',
+    '工作顺利，可能有新的机会出现。',
+    '事业运极佳，有望获得重要突破。'
+  ];
+  
+  const wealthAdvice = [
+    '财运不佳，避免大额投资。',
+    '财运平平，注意节制消费。',
+    '财运一般，保守理财为宜。',
+    '财运不错，可能有意外收入。',
+    '财运亨通，适合投资理财。'
+  ];
+  
+  const healthAdvice = [
+    '健康需特别注意，避免过度劳累。',
+    '健康运势欠佳，注意饮食和休息。',
+    '健康状况一般，适当锻炼有益。',
+    '身体健康，精力充沛。',
+    '健康运极佳，适合开展健身计划。'
+  ];
+  
+  // 幸运时间和开运物品（基于星座）
+  const luckyTimes = ['早晨', '中午', '下午', '傍晚', '晚上'];
+  const luckyItems = ['水晶', '红色饰品', '绿色植物', '金属饰品', '幸运符'];
+  
+  // 简单的确定性选择（基于星座和日期）
+  const constellationIndex = result.constellation.charCodeAt(0) % luckyTimes.length;
+  const dateIndex = parseInt(result.today.split('-')[2]) % luckyItems.length;
+  
+  const luckyTime = luckyTimes[constellationIndex];
+  const luckyItem = luckyItems[dateIndex];
+  
+  // 获取各领域运势描述
+  const overallText = getLevelText(result.overall);
+  const loveText = getLevelText(result.love);
+  const careerText = getLevelText(result.career);
+  const wealthText = getLevelText(result.wealth);
+  const healthText = getLevelText(result.health);
+  
+  // 获取详细建议（分数-1作为索引，确保在数组范围内）
+  const loveDetail = loveAdvice[Math.min(Math.max(result.love - 1, 0), loveAdvice.length - 1)];
+  const careerDetail = careerAdvice[Math.min(Math.max(result.career - 1, 0), careerAdvice.length - 1)];
+  const wealthDetail = wealthAdvice[Math.min(Math.max(result.wealth - 1, 0), wealthAdvice.length - 1)];
+  const healthDetail = healthAdvice[Math.min(Math.max(result.health - 1, 0), healthAdvice.length - 1)];
+  
+  // 生成更丰富的运势内容
   return `${result.constellation}今日运势 (${result.today})\n\n` +
-    `综合运势：${stars} (${result.overall}星)\n` +
-    `爱情运势：${'*'.repeat(result.love)}${'-'.repeat(5 - result.love)}\n` +
-    `事业运势：${'*'.repeat(result.career)}${'-'.repeat(5 - result.career)}\n` +
-    `财运运势：${'*'.repeat(result.wealth)}${'-'.repeat(5 - result.wealth)}\n` +
-    `健康运势：${'*'.repeat(result.health)}${'-'.repeat(5 - result.health)}\n\n` +
+    `综合运势：${overallText}\n` +
+    `爱情运势：${loveText} - ${loveDetail}\n` +
+    `事业运势：${careerText} - ${careerDetail}\n` +
+    `财运运势：${wealthText} - ${wealthDetail}\n` +
+    `健康运势：${healthText} - ${healthDetail}\n\n` +
     `今日建议：${result.dailyAdvice}\n` +
     `幸运颜色：${result.luckyColor}\n` +
     `幸运数字：${result.luckyNumber}\n` +
-    `幸运方位：${result.luckyDirection}\n\n` +
+    `幸运方位：${result.luckyDirection}\n` +
+    `幸运时间：${luckyTime}\n` +
+    `开运物品：${luckyItem}\n\n` +
     `${result.description}`;
 }
 
