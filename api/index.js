@@ -20,26 +20,131 @@ const CONSTELLATIONS = [
 const memoryCache = new Map();
 const CACHE_TTL = 60 * 60 * 1000; // 1小时缓存
 
-// 运势评分词汇
-const RATING_WORDS = [
-  { level: 1, words: ['不佳', '欠佳', '需要注意'] },
-  { level: 2, words: ['一般', '平平', '尚可'] },
-  { level: 3, words: ['良好', '不错', '顺利'] },
-  { level: 4, words: ['不错', '好运', '顺利'] },
-  { level: 5, words: ['极佳', '大吉', '非常顺利'] }
+// 幸运颜色（更丰富细致）
+const LUCKY_COLORS_RICH = [
+  '樱桃红', '天空蓝', '翡翠绿', '金橙色', '薰衣草紫',
+  '珊瑚粉', '宝石蓝', '柠檬黄', '玫瑰金', '薄荷绿',
+  '酒红色', '孔雀蓝', '杏色', '丁香紫', '湖蓝色'
 ];
 
-const ADVICE_POOL = [
-  "保持积极心态，机会就在眼前",
-  "注意沟通方式，避免误会",
-  "理财需谨慎，不要盲目投资",
-  "健康是基础，注意休息",
-  "团队合作能带来更好的效果",
-  "今天适合学习新技能",
-  "勇敢表达自己的想法",
-  "细节决定成败，多检查",
-  "信任他人，也值得被信任",
-  "保持平衡，不要过度工作"
+// 贵人星座池
+const NOBLE_SIGNS = ['白羊座', '金牛座', '双子座', '巨蟹座', '狮子座', '处女座',
+  '天秤座', '天蝎座', '射手座', '摩羯座', '水瓶座', '双鱼座'];
+
+// 各星座的爱情运势描述池（每个星座多条，按运势高低分5档）
+const LOVE_DESC = {
+  low: [
+    '单身者恋爱运较弱，常把微笑挂在脸上可提升异性缘；恋爱中的人易被恋人误会。',
+    '感情方面容易有摩擦，多站在对方角度思考，切忌固执己见。',
+    '桃花运有些低迷，但不必着急，缘分来了自然挡不住。',
+    '感情上会遇到一些小困扰，冷静处理比冲动更明智。',
+    '单身者容易陷入暗恋，有情况不如主动出击；有伴侣者要多陪伴。'
+  ],
+  mid: [
+    '感情运势平稳，有伴侣的人适合安排一次小约会增进感情。',
+    '单身者今天有机会和有好感的人深入交流，把握机会。',
+    '感情方面没有大波折，但也要用心经营，不能懈怠。',
+    '恋爱中的人可能会有些小争吵，以退为进往往效果更好。',
+    '桃花运一般，但身边或许就有意想不到的缘分在等着你。'
+  ],
+  high: [
+    '爱情运势旺盛，单身者有望邂逅心仪对象，有伴侣的人感情更加甜蜜。',
+    '桃花朵朵开！今天特别容易给人留下好印象，大方展示自己的魅力吧。',
+    '感情方面顺风顺水，恋人之间心有灵犀，相处格外融洽。',
+    '今天适合向心仪的人表白，成功率颇高；有伴侣的人感情稳定甜蜜。',
+    '爱情运极佳，可能有意外的惊喜等着你，要保持开放的心态。'
+  ]
+};
+
+// 财富运势描述池
+const WEALTH_DESC = {
+  low: [
+    '大笔投资时，要好好做功课，没时间做功课就别投资咯！',
+    '财运稍弱，今天不宜大额消费或冒险投资，守住钱包最重要。',
+    '钱财方面要谨慎，可能有意外开销，提前做好心理准备。',
+    '财运欠佳，避免跟风投资，稳健理财才是正道。',
+    '这两天花钱要有节制，能省则省，细水长流。'
+  ],
+  mid: [
+    '财运平平，适合做些稳健的理财规划，不宜冒险。',
+    '收入和支出基本平衡，量入为出，理性消费。',
+    '财运一般，偏财运不旺，正财还好，踏实工作是关键。',
+    '金钱方面没有大起大落，维持现有节奏即可。',
+    '适合梳理一下财务状况，做好未来的储蓄计划。'
+  ],
+  high: [
+    '财运不错，可能有意外之财或好的投资机会，但也要量力而行。',
+    '偏财运旺！今天运气不错，可以适当参与一些低风险理财。',
+    '财运亨通，工作上可能有额外收益，好好把握。',
+    '金钱方面有好消息，可能是涨薪、奖金或意外收入。',
+    '财运极佳，投资眼光准，这段时间可以稳步推进理财计划。'
+  ]
+};
+
+// 事业运势描述池
+const CAREER_DESC = {
+  low: [
+    '上司对你多加挑剔，会让你觉得很烦，争辩会被认为是一种无理取闹，少说多做才好。',
+    '工作上遇到阻碍，不要慌张，保持耐心，慢慢化解。',
+    '今天工作效率不高，容易分心，重要事情不妨明天再做。',
+    '职场上有些压力，可能来自同事或领导，学会放松很重要。',
+    '事业运势偏弱，低调行事为上策，不要锋芒太露。'
+  ],
+  mid: [
+    '工作运势中规中矩，按照既定计划推进，不要自乱阵脚。',
+    '职场上没有特别的好事或坏事，脚踏实地做好本职工作。',
+    '事业运平稳，适合处理日常事务，不宜做重大决策。',
+    '工作方面虽然没有太大突破，但基础工作做扎实也很重要。',
+    '今天适合整理工作思路，为下一步发展做好铺垫。'
+  ],
+  high: [
+    '事业运势旺盛，工作上思路清晰，表现出色，容易获得认可。',
+    '今天职场上有贵人相助，好好把握合作机会。',
+    '工作顺风顺水，有望完成重要项目或获得好评。',
+    '事业上有突破的可能，勇敢展示自己的能力，机会就在眼前。',
+    '职场运极佳，今天是谈合作、汇报项目的好时机。'
+  ]
+};
+
+// 整体运势描述池
+const OVERALL_DESC = {
+  low: [
+    '对方模棱两可的态度让你感到苦恼，感觉遇到爱情的叉道口，有些不知所措。理财小有收获，有节约习惯的人更是收效明显。学生课业压力较大，遇到的困难也极具挑战性，需请教他人才能有所突破。',
+    '今天运势整体偏低，很多事情不顺心，需要多一些耐心。要注意保持情绪稳定，冲动是魔鬼。',
+    '运势低迷的一天，建议低调行事，少做决定，等待时机好转再出手。',
+    '今天诸事不顺，但也不要灰心，逆境往往是成长的契机。多休息，调整状态。',
+    '整体运势欠佳，感情、工作都需要格外用心，不要轻易放弃。'
+  ],
+  mid: [
+    '今天运势平稳，没有大起大落。工作上按部就班，生活中保持平和心态，就是最好的状态。',
+    '运势中庸，但平淡也是一种幸福。感情稳定，工作稳中求进，财运一般但无大碍。',
+    '今天属于普通的一天，但平凡中有小确幸，用心感受身边的美好。',
+    '整体运势一般，专注于当下最重要的事，不要分散精力在无关的事上。',
+    '运势平平，但做好该做的事，也是一种积累。机会留给有准备的人。'
+  ],
+  high: [
+    '今天整体运势极佳！感情、事业、财运全面开花，是大展身手的好日子，记得抓住机会。',
+    '好运连连的一天！无论做什么都顺顺利利，心情愉快，充分利用这股好运吧。',
+    '运势旺盛，今天适合推进重要计划，与人交流效果也很好，贵人随时出现。',
+    '今天精力充沛、思路敏捷，是突破自我的好时机，勇敢迈出那一步！',
+    '整体运势非常不错，保持积极心态，相信自己，一切皆有可能。'
+  ]
+};
+
+// 提示语池
+const TIPS_POOL = [
+  '借歌抒情是排解忧愁的好办法。',
+  '深呼吸，放慢脚步，今天就从容一点吧。',
+  '和久未联系的朋友叙叙旧，能带来意想不到的好运。',
+  '整理一下房间，空间清爽了，心情也会跟着好转。',
+  '多喝水，今天记得注意身体。',
+  '遇到困难先不要急，睡一觉往往会有新的思路。',
+  '一个微笑，能化解很多尴尬和误会。',
+  '今天适合早睡，养精蓄锐，明天更好出发。',
+  '把今天想说的话说出来，憋着只会让自己更累。',
+  '运动一下，哪怕散散步，心情都会好很多。',
+  '用心对待今天遇到的每一个人，善意会回来的。',
+  '找一首喜欢的歌单循环播放，进入今天的最佳状态。'
 ];
 
 // 获取北京时间（UTC+8）
@@ -83,21 +188,31 @@ function generateHoroscope(constellationId) {
   const constellation = CONSTELLATIONS.find(c => c.id === constellationId);
   
   // 生成幸运元素
-  const luckyColors = ['红色', '蓝色', '绿色', '黄色', '紫色', '白色', '黑色'];
-  const luckyNumbers = [1, 3, 5, 7, 8, 9, 11, 13];
-  const directions = ['东方', '西方', '南方', '北方', '东南', '西南', '东北', '西北'];
+  const luckyNumbers = [1, 2, 3, 5, 6, 7, 8, 9];
+  const directions = ['东方', '西方', '南方', '北方', '东南方', '西南方', '东北方', '西北方'];
   
-  const luckyColor = luckyColors[Math.floor(random() * luckyColors.length)];
+  const luckyColor = LUCKY_COLORS_RICH[Math.floor(random() * LUCKY_COLORS_RICH.length)];
   const luckyNumber = luckyNumbers[Math.floor(random() * luckyNumbers.length)];
   const luckyDirection = directions[Math.floor(random() * directions.length)];
   
-  // 生成今日建议
-  const adviceIndex = Math.floor(random() * ADVICE_POOL.length);
-  const dailyAdvice = ADVICE_POOL[adviceIndex];
+  // 贵人星座（排除自身）
+  const otherSigns = NOBLE_SIGNS.filter(s => s !== constellation.name);
+  const nobleSign = otherSigns[Math.floor(random() * otherSigns.length)];
   
-  // 生成运势描述
-  const ratingWord = RATING_WORDS.find(r => r.level === overall)?.words[0] || '不错';
-  const description = `今日${constellation.name}运势${ratingWord}，${dailyAdvice}`;
+  // 提示语
+  const tip = TIPS_POOL[Math.floor(random() * TIPS_POOL.length)];
+  
+  // 根据分数选择描述文本
+  function pickDesc(pool, score) {
+    if (score <= 2) return pool.low[Math.floor(random() * pool.low.length)];
+    if (score <= 3) return pool.mid[Math.floor(random() * pool.mid.length)];
+    return pool.high[Math.floor(random() * pool.high.length)];
+  }
+  
+  const loveDesc = pickDesc(LOVE_DESC, love);
+  const wealthDesc = pickDesc(WEALTH_DESC, wealth);
+  const careerDesc = pickDesc(CAREER_DESC, career);
+  const overallDesc = pickDesc(OVERALL_DESC, overall);
   
   const result = {
     constellation: constellation.name,
@@ -114,8 +229,12 @@ function generateHoroscope(constellationId) {
     luckyColor,
     luckyNumber,
     luckyDirection,
-    dailyAdvice,
-    description,
+    nobleSign,
+    loveDesc,
+    wealthDesc,
+    careerDesc,
+    overallDesc,
+    tip,
     timestamp: Date.now()
   };
   
@@ -152,88 +271,18 @@ function findConstellation(input) {
   return null;
 }
 
-// 格式化微信输出
+// 格式化微信输出（仿旧版格式，内容丰富接地气）
 function formatWechatOutput(result) {
-  // 分数转文字描述
-  function getLevelText(score) {
-    if (score >= 5) return '极佳';
-    if (score >= 4) return '不错';
-    if (score >= 3) return '一般';
-    if (score >= 2) return '欠佳';
-    return '不佳';
-  }
-  
-  // 各领域详细建议（根据分数选择）
-  const loveAdvice = [
-    '感情方面需要多主动，单身者有机会遇到心仪对象。',
-    '感情可能有些波折，多沟通能化解误会。',
-    '感情运势平平，保持现状即可。',
-    '感情稳定，适合安排浪漫约会。',
-    '感情甜蜜，适合表白或求婚。'
-  ];
-  
-  const careerAdvice = [
-    '工作压力较大，注意劳逸结合。',
-    '工作中可能遇到挑战，保持耐心。',
-    '工作运势一般，按部就班完成任务。',
-    '工作顺利，可能有新的机会出现。',
-    '事业运极佳，有望获得重要突破。'
-  ];
-  
-  const wealthAdvice = [
-    '财运不佳，避免大额投资。',
-    '财运平平，注意节制消费。',
-    '财运一般，保守理财为宜。',
-    '财运不错，可能有意外收入。',
-    '财运亨通，适合投资理财。'
-  ];
-  
-  const healthAdvice = [
-    '健康需特别注意，避免过度劳累。',
-    '健康运势欠佳，注意饮食和休息。',
-    '健康状况一般，适当锻炼有益。',
-    '身体健康，精力充沛。',
-    '健康运极佳，适合开展健身计划。'
-  ];
-  
-  // 幸运时间和开运物品（基于星座）
-  const luckyTimes = ['早晨', '中午', '下午', '傍晚', '晚上'];
-  const luckyItems = ['水晶', '红色饰品', '绿色植物', '金属饰品', '幸运符'];
-  
-  // 简单的确定性选择（基于星座和日期）
-  const constellationIndex = result.constellation.charCodeAt(0) % luckyTimes.length;
-  const dateIndex = parseInt(result.today.split('-')[2]) % luckyItems.length;
-  
-  const luckyTime = luckyTimes[constellationIndex];
-  const luckyItem = luckyItems[dateIndex];
-  
-  // 获取各领域运势描述
-  const overallText = getLevelText(result.overall);
-  const loveText = getLevelText(result.love);
-  const careerText = getLevelText(result.career);
-  const wealthText = getLevelText(result.wealth);
-  const healthText = getLevelText(result.health);
-  
-  // 获取详细建议（分数-1作为索引，确保在数组范围内）
-  const loveDetail = loveAdvice[Math.min(Math.max(result.love - 1, 0), loveAdvice.length - 1)];
-  const careerDetail = careerAdvice[Math.min(Math.max(result.career - 1, 0), careerAdvice.length - 1)];
-  const wealthDetail = wealthAdvice[Math.min(Math.max(result.wealth - 1, 0), wealthAdvice.length - 1)];
-  const healthDetail = healthAdvice[Math.min(Math.max(result.health - 1, 0), healthAdvice.length - 1)];
-  
-  // 生成更丰富的运势内容
-  return `${result.constellation}今日运势 (${result.today})\n\n` +
-    `综合运势：${overallText}\n` +
-    `爱情运势：${loveText} - ${loveDetail}\n` +
-    `事业运势：${careerText} - ${careerDetail}\n` +
-    `财运运势：${wealthText} - ${wealthDetail}\n` +
-    `健康运势：${healthText} - ${healthDetail}\n\n` +
-    `今日建议：${result.dailyAdvice}\n` +
-    `幸运颜色：${result.luckyColor}\n` +
+  return `星座：${result.constellation}\n` +
+    `贵人方位：${result.luckyDirection}\n` +
+    `贵人星座：${result.nobleSign}\n` +
     `幸运数字：${result.luckyNumber}\n` +
-    `幸运方位：${result.luckyDirection}\n` +
-    `幸运时间：${luckyTime}\n` +
-    `开运物品：${luckyItem}\n\n` +
-    `${result.description}`;
+    `幸运颜色：${result.luckyColor}\n` +
+    `爱情运势：${result.loveDesc}\n` +
+    `财富运势：${result.wealthDesc}\n` +
+    `事业运势：${result.careerDesc}\n` +
+    `整体运势：${result.overallDesc}\n` +
+    `提示：${result.tip}`;
 }
 
 // 主处理函数
